@@ -1,0 +1,21 @@
+---
+# v1.0.1    2017-11-10    webmaster@highskillz.com
+# 
+# using docker-compose to make builds easier
+#   docker-compose build --force-rm --pull
+#   docker-compose build --force-rm --pull --no-cache
+#
+version: "2.3"
+
+services:
+
+  stable:
+    image: ez123/dockerish:stable
+    build:
+      context:   .
+      dockerfile: ./Dockerfile.stable
+  edge:
+      image: ez123/dockerish:edge
+      build:
+        context:   .
+        dockerfile: ./Dockerfile.edge

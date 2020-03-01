@@ -1,45 +1,115 @@
-FROM docker:edge
+# #########################################################################
+FROM docker:edge as final
+
+LABEL maintainer="webmaster@highskillz.com"
 
 RUN \
     echo "===> Updating TLS certificates..."         && \
-    apk --update add \
+    apk --update --no-cache add \
             ca-certificates \
             openssl \
     && \
-    \
+    echo "..."
+
+RUN \
     echo "===> Adding usefull packages for devops shell-works..."  && \
-    apk --update add \
+    apk --update --no-cache add \
             coreutils \
+            tar \
+            make \
+            \
             file \
             bash \
             less \
             nano \
+            jq \
             \
             curl \
             wget \
             \
+            zip \
+            xz \
+            unrar \
+            \
             git \
-            make \
+            dos2unix \
             \
-            py-pip \
             \
+            groff \
+        && \
+    \
+    sed -i -e "s/bin\/ash/bin\/bash/" /etc/passwd \
     && \
-    pip install docker-compose \
+    echo "..."
+SHELL ["/bin/bash", "-c"]
+
+
+RUN \
+    echo "===> Adding Python runtime..."  && \
+    apk --update --no-cache add \
+            python3 \
+            py3-pip \
+        && \
+    \
+    echo "===> Configuring Python and PIP..."  && \
+    pip3 list &&\
+    pip3 install --no-cache-dir --upgrade --upgrade-strategy eager \
+        pip setuptools wheel \
+        pip-tools \
     && \
+    pip3 list && \
+    \
     echo "===> Cleaning up ..."  && \
     rm -rf \
-      "${HOME}/.cache" \
-       /var/cache/apk/* \
-       /tmp/*               \
-       /var/tmp/*           \
+        "${HOME}/.cache" \
+        /var/cache/apk/* \
+        /tmp/*           \
+        /var/tmp/*       \
     && \
-    \
-    echo "OK!"
+    echo "..."
 
-SHELL ["/bin/bash", "-c"]
+# #########################################################################
+FROM final as int--misc-tools
+
+RUN \
+    apk --update --no-cache add \
+        --virtual build-dependencies \
+            python3-dev \
+            build-base  \
+            openssl-dev \
+            libffi-dev \
+    && \
+    pip3 list &&\
+    \
+    echo "===> Installing (tools)..." && \
+        python3 -m venv /venv/tools \
+        &&\
+        /venv/tools/bin/pip3 install --no-cache-dir \
+            docker-compose \
+        && \
+        echo "..."
+
+
+
+# #########################################################################
+FROM final
+
+# =========================================================================
+# we rely on the intermediate image and the final image being the same;
+# the source and target location must be the same as venv relies on hardwired python path
+COPY --from=int--misc-tools /venv   /venv
+
+RUN \
+    du -hd1 /venv &&\
+    \
+    echo "..."
+
+ENV PATH="/venv/az/bin:/venv/aws/bin:/venv/tools/bin:$PATH"
 
 RUN \
   docker --version && \
   docker-compose --version && \
-  git --version
+  git --version && \
+  \
+  echo "Done!!"
 

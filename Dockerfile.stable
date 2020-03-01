@@ -36,6 +36,8 @@ RUN \
     \
     echo "OK!"
 
+SHELL ["/bin/bash", "-c"]
+
 RUN \
   docker --version && \
   docker-compose --version && \

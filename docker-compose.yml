@@ -10,12 +10,12 @@ version: "2.3"
 services:
 
   stable:
-    image: ez123/dockerish:stable
+    image: kitaruk/dockerish:stable
     build:
       context:   .
       dockerfile: ./Dockerfile.stable
   edge:
-      image: ez123/dockerish:edge
+      image: kitaruk/dockerish:edge
       build:
         context:   .
         dockerfile: ./Dockerfile.edge
